@@ -34,6 +34,19 @@ export default function Home() {
         }
     };
 
+    function getBackgroundColor(word: string[], attempt: string[], letterIndex: number): string {
+        const letter = attempt[letterIndex];
+
+        if (word[letterIndex] === attempt[letterIndex]) {
+            return '#79b851'; // Green color for correct letter and position
+        } else if (word.includes(letter)) {
+            return '#f3c232'; // Yellow color for correct letter but wrong position (first occurrence)
+        } else {
+            return ''; // No background color
+        }
+    }
+
+
     return (
         <>
             <h1 className="text-5xl text-center mt-[4vh] bg-gradient-to-r from-blue-500 to-green-500 text-transparent bg-clip-text font-semibold">
@@ -45,9 +58,9 @@ export default function Home() {
                         {attempt.map((letter: string, letterIndex: number) => (
                             <span
                                 key={letterIndex}
-                                className={`w-16 my-2 h-16 leading-[4rem] rounded-lg border text-black bg-white border-gray-300 text-2xl text-center 
-                                     ${word[letterIndex] === attempt[letterIndex] ? 'bg-green-500' :
-                                    `${word.includes(letter) ? 'bg-yellow-200' : ''}`}`}>
+                                className={`w-16 my-2 h-16 font-semibold leading-[4rem] rounded-lg border text-black bg-white border-gray-300 text-2xl text-center`}
+                                style={{backgroundColor: getBackgroundColor(word, attempt, letterIndex)}}
+                            >
                                 {letter}
                              </span>
                         ))}
@@ -55,8 +68,6 @@ export default function Home() {
                 ))}
             </div>
             <Guesses word={word} currentRow={tries.length + 1} onAttempt={handleAttempt}/>
-            {tries.length === 6 && <p>You have reached the maximum number of attempts.</p>}
-            <p>{result}</p>
         </>
 
 

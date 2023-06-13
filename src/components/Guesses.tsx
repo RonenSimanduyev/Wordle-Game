@@ -79,13 +79,7 @@ const Guesses: React.FC<GuessesProps> = ({word, currentRow, onAttempt}) => {
                     </div>
                 </form>
             )}
-            {currentRow > 1 && (
-                <div>
-                    {previousAttempts.map((attempt, index) => (
-                        <p key={index}>Previous Attempt {index + 1}: {attempt.join(' ')}</p>
-                    ))}
-                </div>
-            )}
+            {word}
         </div>
     );
 };
