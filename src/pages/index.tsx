@@ -1,11 +1,14 @@
 import React, {useEffect, useState} from 'react';
 import words from '../../data/words.json';
 import Guesses from '@/components/Guesses';
+import Popup from "@/components/Popup";
 
 export default function Home() {
     const [word, setWord] = useState<string[]>(['', '', '', '', '']);
-    const [result, setResult] = useState('');
     const [tries, setTries] = useState<string[][]>([]);
+    const [message, setMessage] = useState<string>('');
+    const [showPopup, setShowPopup] = useState(false);
+    const [gameWon, setGameWon] = useState(false); // Track if the game has been won
 
     useEffect(() => {
         const fetchWord = () => {
@@ -22,30 +25,41 @@ export default function Home() {
         fetchWord();
     }, []);
 
-    useEffect(() => {
-        console.log(word, ':word');
-    }, [word]);
-
     const handleAttempt = (attempt: string[]) => {
-        if (tries.length < 6) {
+        const isCorrect = attempt.join('') === word.join('');
+
+        if (isCorrect) {
             setTries((prevTries) => [...prevTries, attempt]);
-            console.log();
-            console.log(tries[tries.length - 1], 'tries');
+            setMessage(`Congratulations! You guessed the word: ${word.join('')}`);
+            setShowPopup(true);
+            setGameWon(true); // Set the gameWon state to true
+        }
+
+        if (!gameWon && tries.length < 6 && !isCorrect) {
+            setTries((prevTries) => [...prevTries, attempt]);
+        } else if (!gameWon && tries.length === 6 && !isCorrect) {
+            setMessage(`You lost! The word was ${word.join('')}`);
+            setShowPopup(true);
         }
     };
 
     function getBackgroundColor(word: string[], attempt: string[], letterIndex: number): string {
         const letter = attempt[letterIndex];
 
-        if (word[letterIndex] === attempt[letterIndex]) {
+        if (word[letterIndex] === letter) {
             return '#79b851'; // Green color for correct letter and position
         } else if (word.includes(letter)) {
+            const count = word.filter((char) => char === letter).length;
+            console.log(count);
             return '#f3c232'; // Yellow color for correct letter but wrong position (first occurrence)
         } else {
             return ''; // No background color
         }
     }
+    const handleClosePopup = () => {
+        setShowPopup(false);
 
+    };
 
     return (
         <>
@@ -67,7 +81,25 @@ export default function Home() {
                     </div>
                 ))}
             </div>
-            <Guesses word={word} currentRow={tries.length + 1} onAttempt={handleAttempt}/>
+            {!gameWon && ( // Render the Guesses component only if the game is not won
+                <Guesses
+                    setMessage={setMessage}
+                    message={message}
+                    word={word}
+                    currentRow={tries.length + 1}
+                    onAttempt={handleAttempt}
+                    showPopup={showPopup}
+                    setShowPopup={setShowPopup}
+                />
+            )}
+            <h1 className="text-center text-3xl">{word}</h1>
+            {showPopup && (
+                <Popup
+                    visible={showPopup}
+                    onClose={handleClosePopup}
+                    message={message ?? ''} // Use nullish coalescing operator to provide a default value
+                />
+            )}
         </>
 
 

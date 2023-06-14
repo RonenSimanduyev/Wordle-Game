@@ -1,16 +1,24 @@
-import React, {useState, useRef, useEffect} from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import words from '../../data/words.json';
+import Popup from '@/components/Popup';
 
-type GuessesProps = {
+interface GuessesProps {
     word: string[];
     currentRow: number;
     onAttempt: (attempt: string[]) => void;
+    message?: string; // Make the message prop optional
+    setMessage: React.Dispatch<React.SetStateAction<string>>; // Add the setMessage prop
+    showPopup:boolean
+    setShowPopup: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
-const Guesses: React.FC<GuessesProps> = ({word, currentRow, onAttempt}) => {
+
+const Guesses: React.FC<GuessesProps> = ({ word, currentRow, onAttempt,message,setMessage ,showPopup, setShowPopup}) => {
     const [guess, setGuess] = useState<string[]>(['', '', '', '', '']);
     const [previousAttempts, setPreviousAttempts] = useState<string[][]>([]);
     const inputRefs = useRef<HTMLInputElement[]>([]);
     const formRef = useRef<HTMLFormElement>(null);
+
 
     useEffect(() => {
         if (formRef.current) {
@@ -34,23 +42,35 @@ const Guesses: React.FC<GuessesProps> = ({word, currentRow, onAttempt}) => {
         event: React.KeyboardEvent<HTMLInputElement>
     ) => {
         if (event.key === 'Backspace' && index > 0 && guess[index].length === 0) {
-            inputRefs.current[index - 1]?.focus();
+            if (guess[index - 1].length > 0) {
+                inputRefs.current[index - 1]?.focus();
+            }
         }
     };
+
 
     const handleSubmit = (event: React.FormEvent) => {
         event.preventDefault();
 
-        if (guess.some((input) => input === '')) {
-            return <h1>You need to fill all the inputs.</h1>;
+        const guessString = guess.join('');
+        if (words.includes(guessString)) {
+            onAttempt(guess);
+            setPreviousAttempts((prevAttempts) => [...prevAttempts, guess]);
+            setGuess(Array.from({ length: word.length }, () => ''));
+            if (guessString === word.join('')) {
+                setShowPopup(true);
+                setMessage('You won!');
+            }
+
+            inputRefs.current[0]?.focus();
+        } else {
+            setShowPopup(true);
+            setMessage('This word is not in our data');
         }
+    };
 
-        // console.log('guess:', guess.length, guess);
-        onAttempt(guess);
-        setPreviousAttempts((prevAttempts) => [...prevAttempts, guess]);
-        setGuess(Array.from({length: word.length}, () => ''));
-
-        inputRefs.current[0]?.focus();
+    const handleClosePopup = () => {
+        setShowPopup(false);
     };
 
     return (
@@ -73,13 +93,18 @@ const Guesses: React.FC<GuessesProps> = ({word, currentRow, onAttempt}) => {
                             />
                         ))}
                     </div>
-                    <div
-                        className="flex items-center justify-center w-[93%] rounded-xl m-auto sm:w-[600px] h-10 bg-gray-500">
+                    <div className="flex items-center justify-center w-[93%] rounded-xl m-auto sm:w-[600px] h-10 bg-gray-500">
                         <button type="submit">Submit</button>
                     </div>
                 </form>
             )}
-            {word}
+            {showPopup && (
+                <Popup
+                    visible={showPopup}
+                    onClose={handleClosePopup}
+                    message={message ?? ''} // Use nullish coalescing operator to provide a default value
+                />
+            )}
         </div>
     );
 };
